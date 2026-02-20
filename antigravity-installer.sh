@@ -29,7 +29,7 @@ if [[ "${1-}" == "--uninstall" ]]; then
 fi
 
 # requirements check
-for cmd in curl bsdtar sha256sum awk; do
+for cmd in curl bsdtar sha256sum awk sudo; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "[-] Required command '$cmd' not found. Install it and retry: $cmd" >&2
     exit 1
@@ -70,6 +70,13 @@ read -r DEBVER DEBFILENAME DEBSHA256 <<< "$(
       pkg="";
     }
     END{
+      # Some APT repositories do not end Packages with a blank line.
+      # Handle EOF-terminated stanza so we do not miss the real latest entry.
+      if (pkg=="antigravity" && ver!="" && file!="" && sha!="") {
+        last_ver=ver;
+        last_file=file;
+        last_sha=sha;
+      }
       if (last_ver && last_file && last_sha)
         print last_ver, last_file, last_sha;
     }
